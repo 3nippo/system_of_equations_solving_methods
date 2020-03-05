@@ -13,4 +13,5 @@ We can represent any nondegenerate square matrix A (mxn) as multiplication of lo
 - Get analytic solution of system of equations with O(k * m^2) operations, where k is number of columns in matrix of unknown values.
 - Get inverse matrix A^-1 with O(m^2) operations
 - Get determinant of matrix A with O(m) operations.
+
 The error is optimized as far as possible by rearranging the rows during the LU decomposition (https://en.wikipedia.org/wiki/LU_decomposition)

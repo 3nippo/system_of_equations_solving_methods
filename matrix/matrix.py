@@ -23,7 +23,7 @@ class Matrix:
             self.__A = []
             return
 
-        if elems is None:
+        if not elems:
             new_self = Matrix.unit_matrix(m, n)
             self.__dict__.update(new_self.__dict__)
             return
@@ -190,3 +190,46 @@ class Matrix:
                 res[i][j] = self[i][j] - b[i][j]
 
         return res
+
+
+class TriDiagonalMatrix(Matrix):
+    def __init__(self, m=None, elems=None):
+        super().__init__(m, 3, elems)
+
+    def to_Matrix(self):
+        m, _ = self.shape()
+        A = self
+
+        elems = []
+
+        for j in range(1, 3):
+            elems.append(A[0][j])
+
+        for j in range(2, m):
+            elems.append(0)
+
+        for i in range(1, m - 1):
+            for j in range(i - 1):
+                elems.append(0)
+
+            for el in A[i]:
+                elems.append(el)
+
+            for j in range(i + 2, m):
+                elems.append(0)
+
+        for j in range(m - 2):
+            elems.append(0)
+
+        for j in range(2):
+            elems.append(A[m - 1][j])
+
+        return Matrix(m, m, elems)
+
+    def __mul__(self, B):
+        if isinstance(B, TriDiagonalMatrix):
+            raise NotImplementedError
+
+        A = self.to_Matrix()
+
+        return A * B

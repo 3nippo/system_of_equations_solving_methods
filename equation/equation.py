@@ -1,5 +1,5 @@
 import copy
-from matrix import Matrix
+from matrix import Matrix, TriDiagonalMatrix
 
 
 class CalledBeforeLUError(Exception):
@@ -10,6 +10,11 @@ class CalledBeforeLUError(Exception):
 class EmptyMatrixError(Exception):
     def __str__(self):
         return "Given empty matrix of shape (0, 0)"
+
+
+class NotSuitableMethod(Exception):
+    def __str__self(self):
+        return "This method is not suitable for given matrix"
 
 
 class LUDecomposition:
@@ -170,5 +175,54 @@ class Equation:
                     l_sum += X[j][k] * LU[i][j]
 
                 X[i][k] = (y[i] - l_sum) / LU[i][i]
+
+        return X
+
+    def sweep_method(self):
+        A = self.__A
+        B = self.__B
+
+        m, _ = A.shape()
+        _, n = B.shape()
+
+        if not isinstance(A, TriDiagonalMatrix):
+            raise NotSuitableMethod
+
+        X = Matrix(m, n)
+
+        for k in range(n):
+            a = 0
+            b = A[0][1]
+            c = A[0][2]
+            d = B[0][k]
+
+            P = [-c / b]
+            Q = [ d / b]
+
+            for i in range(1, m - 1):
+                a = A[i][0]
+                b = A[i][1]
+                c = A[i][2]
+                d = B[i][k]
+
+                denominator = b + a * P[-1]
+
+                p = -c / denominator
+                q = (d - a * Q[-1]) / denominator
+
+                P.append(p)
+                Q.append(q)
+
+            a = A[m - 1][0]
+            b = A[m - 1][1]
+            # c = 0
+            d = B[m - 1][k]
+
+            q = (d - a * Q[-1]) / (b + a * P[-1])
+
+            X[m - 1][k] = q
+
+            for i in range(m - 2, -1, -1):
+                X[i][k] = P[i] * X[i + 1][k] + Q[i]
 
         return X

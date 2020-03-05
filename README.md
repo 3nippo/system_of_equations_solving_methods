@@ -2,7 +2,7 @@
 Here we have two modules: matrix and equation.
 
 # Matrix
-Simple implementation of matrices with m rows and n columns.
+Implementation of matrices with m rows and n columns. Contains derived class TriDiagonalMatrix. It represents (!) tridiagonal matrices. Values are stored as [[a_1, b_1, c_1], ..., [a_m, b_m, c_m]], where a_1 = 0, c_m = 0.
 
 # Equations
 By now contains only analytic solution through LU decomposition.
@@ -15,3 +15,7 @@ We can represent any nondegenerate square matrix A (mxn) as multiplication of lo
 - Get determinant of matrix A with O(m) operations.
 
 The error is optimized as far as possible by rearranging the rows during the LU decomposition (https://en.wikipedia.org/wiki/LU_decomposition)
+
+2) Sweep method
+
+Allows solve equations where A is tridiagonal matrix with O(m) operations.

@@ -25,4 +25,4 @@ Allows solve equations where A is tridiagonal matrix with O(m) operations.
 Allow solve linear equations with given error.
 
 - Simple iterations method --- simple (!) method. No additional profits.
-- Zeydel method. It is faster then simple one because simple one computes all components of X^(k + 1) based on components of X^(k) only, when Zeydel's method use new computed values of X^(k + 1) to compute the next ones if he can.
+- Zeydel method. It is faster than simple one because simple computes all components of X^(k + 1) based on components of X^(k) only, when Zeydel's method uses new computed values of X^(k + 1) to compute the following components if he can.

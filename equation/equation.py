@@ -1,5 +1,7 @@
 import copy
 from matrix import Matrix, TriDiagonalMatrix
+import itertools
+import math
 
 
 class CalledBeforeLUError(Exception):
@@ -226,3 +228,127 @@ class Equation:
                 X[i][k] = P[i] * X[i + 1][k] + Q[i]
 
         return X
+
+    @staticmethod
+    def __non_zero_diagonal__(A, B):
+        m, n = A.shape()
+
+        for perm in itertools.permutations(range(m)):
+            failed = 0
+
+            for i in range(n):
+                if A[perm[i]][i] == 0:
+                    failed = 1
+                    break
+
+            if not failed:
+                break
+
+        return A.get_permutated(perm), B.get_permutated(perm)
+
+    def __iterative_method_preparation__(self):
+        A, B = self.__A, self.__B
+
+        m, n = A.shape()
+
+        A, B = Equation.__non_zero_diagonal__(A, B)
+
+        Al = Matrix(m, n)
+
+        for i in range(m):
+            for j in range(n):
+                if i == j:
+                    Al[i][j] = 0
+                else:
+                    Al[i][j] = -A[i][j] / A[i][i]
+
+        Bt = Matrix(m, 1)
+
+        for j in range(B.shape()[1]):
+            for i in range(m):
+                Bt[i][j] = B[i][j] / A[i][i]
+
+        return Al, Bt
+
+    def __iter_init__(self):
+        if 'Al' not in self.__dict__:
+            self.__Al, self.__Bt = self.__iterative_method_preparation__()
+
+    def infimum_iterations_num(self, error, norm, method='simple'):
+        self.__iter_init__()
+
+        Al, Bt = self.__Al, self.__Bt
+        Al_norm = norm(Al)
+
+        log = math.log
+        divisor = log(Al_norm)
+
+        if method == 'zeydel':
+            upper_part = Al.copy()
+            n = upper_part.shape()[0]
+
+            for i in range(n):
+                for j in range(i):
+                    upper_part[i][j] = 0
+
+            divisor = log(norm(upper_part))
+
+        return (log(error) - log(norm(Bt)) + log(1 - Al_norm)) / divisor - 1
+
+    def __iteration_process__(self, error, get_current, norm):
+        self.__iter_init__()
+
+        Al, Bt = self.__Al, self.__Bt
+
+        X_last = Bt.copy()
+
+        X_current = get_current(X_last, Al, Bt)
+
+        Al_norm = norm(Al)
+
+        error_const = Al_norm / (1 - Al_norm) if Al_norm < 1 else 1
+        current_error = error_const * norm(X_current - X_last)
+
+        while error < current_error:
+            X_last = X_current
+
+            X_current = get_current(X_last, Al, Bt)
+
+            current_error = error_const * norm(X_current - X_last)
+
+        return X_current
+
+    @staticmethod
+    def __simple_get_current__(last, A, B):
+        return B + A * last
+
+    @staticmethod
+    def __zeydel_get_current__(last, A, B):
+        current = last.copy()
+
+        n, k = A.shape()[0], B.shape()[1]
+
+        for i in range(k):
+            for j in range(n):
+                current_cell = B[j][i]
+
+                for h in range(n):
+                    current_cell += current[h][i] * A[j][h]
+
+                current[j][i] = current_cell
+
+        return current
+
+    def simple_iterations(self, error):
+        return self.__iteration_process__(
+            error,
+            Equation.__simple_get_current__,
+            Matrix.column_norm
+        )
+
+    def zeydel_method(self, error):
+        return self.__iteration_process__(
+            error,
+            Equation.__zeydel_get_current__,
+            Matrix.column_norm
+        )

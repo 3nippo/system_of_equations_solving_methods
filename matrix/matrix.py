@@ -84,6 +84,21 @@ class Matrix:
         return result
 
     @staticmethod
+    def column_norm(A):
+        norm = float('-inf')
+        m, n = A.shape()
+
+        for i in range(n):
+            current = 0
+
+            for j in range(m):
+                current += abs(A[j][i])
+
+            norm = max(norm, current)
+
+        return norm
+
+    @staticmethod
     def unit_matrix(m, n=None):
         n = n or m
 
@@ -139,6 +154,14 @@ class Matrix:
                 elems.append(A[j][i])
 
         return Matrix(n, m, elems)
+
+    def get_permutated(self, permutation):
+        result = Matrix(*self.shape())
+
+        for i in range(len(permutation)):
+            result[i] = self[permutation[i]]
+
+        return result
 
     def __mul__(self, b):
         m, n = self.shape()

@@ -15,10 +15,14 @@ We can represent any nondegenerate square matrix A (mxn) as multiplication of lo
 - Get determinant of matrix A with O(m) operations.
 
 The error is optimized as far as possible by rearranging the rows during the LU decomposition (https://en.wikipedia.org/wiki/LU_decomposition)
-<<<<<<< HEAD
-=======
 
 2) Sweep method
 
 Allows solve equations where A is tridiagonal matrix with O(m) operations.
->>>>>>> 9736f5cea9d9848eaec22d122dfaea0a83f96fd9
+
+3) Iteration methods
+
+Allow solve linear equations with given error.
+
+- Simple iterations method --- simple (!) method. No additional profits.
+- Zeydel method. It is faster then simple one because simple one computes all components of X^(k + 1) based on components of X^(k) only, when Zeydel's method use new computed values of X^(k + 1) to compute the next ones if he can.

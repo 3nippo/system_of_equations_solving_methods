@@ -26,3 +26,7 @@ Allow solve linear equations with given error.
 
 - Simple iterations method --- simple (!) method. No additional profits.
 - Zeydel method. It is faster than simple one because simple computes all components of X^(k + 1) based on components of X^(k) only, when Zeydel's method uses new computed values of X^(k + 1) to compute the following components if he can.
+
+4) Jacobi rotation method
+
+Algorithm for finding eigenvalues and eigenvectors of a symmetric matrix.

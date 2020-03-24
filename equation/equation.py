@@ -4,6 +4,11 @@ import itertools
 import math
 
 
+class NotSuitableMethod(Exception):
+    def __str__self(self):
+        return "This method is not suitable for given matrix"
+
+
 class CalledBeforeLUError(Exception):
     def __str__(self):
         return "LU matrix has not been constructed yet"
@@ -12,11 +17,6 @@ class CalledBeforeLUError(Exception):
 class EmptyMatrixError(Exception):
     def __str__(self):
         return "Given empty matrix of shape (0, 0)"
-
-
-class NotSuitableMethod(Exception):
-    def __str__self(self):
-        return "This method is not suitable for given matrix"
 
 
 class LUDecomposition:

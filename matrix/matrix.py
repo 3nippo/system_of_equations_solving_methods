@@ -1,5 +1,6 @@
 import random
 import copy
+import math
 
 
 class MatrixDimensionError(Exception):
@@ -105,6 +106,48 @@ class Matrix:
         elems = [1 if i == j else 0 for i in range(m) for j in range(n)]
 
         return Matrix(m, n, elems)
+
+    def max(self, axis=-1):
+        if axis == -1:
+            return self.max(0).max(1)[0][0]
+
+        A = self
+        m, n = A.shape()
+        result = []
+
+        if axis == 1:
+            for i in range(n):
+                l_max = A[0][i]
+
+                for j in range(1, m):
+                    l_max = max(l_max, A[j][i])
+
+                result.append(l_max)
+
+            return Matrix(1, n, result)
+        else:
+            for i in range(m):
+                l_max = A[i][0]
+
+                for j in range(1, n):
+                    l_max = max(l_max, A[i][j])
+
+                result.append(l_max)
+
+            return Matrix(m, 1, result)
+
+    def find(self, val):
+        result = []
+
+        A = self
+        m, n = A.shape()
+
+        for i in range(m):
+            for j in range(n):
+                if val == A[i][j]:
+                    result.append((i, j))
+
+        return result
 
     @staticmethod
     def random_matrix(m, n=None, a=-100, b=100):
@@ -213,6 +256,18 @@ class Matrix:
                 res[i][j] = self[i][j] - b[i][j]
 
         return res
+
+    @staticmethod
+    def out_of_diagonal_norm(A):
+        n, _ = A.shape()
+
+        l_sum = 0
+
+        for i in range(n):
+            for j in range(i):
+                l_sum += A[i][j] * A[i][j]
+
+        return math.sqrt(l_sum)
 
 
 class TriDiagonalMatrix(Matrix):

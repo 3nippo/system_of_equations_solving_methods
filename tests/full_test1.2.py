@@ -1,6 +1,7 @@
 import sys
 sys.path.append('../matrix')
 sys.path.append('../equation')
+sys.path.append('../equation_tools')
 
 from matrix import Matrix, TriDiagonalMatrix
 from equation import Equation

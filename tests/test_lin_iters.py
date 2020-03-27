@@ -1,10 +1,11 @@
 import sys
 sys.path.append('../matrix')
 sys.path.append('../equation')
-sys.path.append('../equation_tools')
+sys.path.append('../iter_process')
 
 from matrix import Matrix
 from equation import Equation
+from iter_process import Linear
 
 A = Matrix(4, elems = [28,  9,  -3, -7,
                        -5, 21,  -5, -3,
@@ -16,11 +17,14 @@ B = Matrix(1, 4, [-159, 63, -45, 24])
 B = B.transpose()
 
 eq = Equation(A, B)
-error = 0.000001
 
 X_analytic = eq.analytic_solution()
-X_simple   = eq.simple_iterations(error)
-X_zeydel   = eq.zeydel_method(error)
+
+error = 0.000001
+lin_iter = Linear(error)
+
+X_simple, simple_actual_iterations = lin_iter.simple_iteration(A, B)
+X_zeydel, zeydel_actual_iterations = lin_iter.zeydel_method(A, B)
 
 print("Analytic answer:")
 print(X_analytic)
@@ -43,8 +47,13 @@ print(X_zeydel)
 print()
 
 print("Simple iterations number of iterations")
-print(eq.infimum_iterations_num(error, Matrix.column_norm))
+print("--Infimum:", lin_iter.infimum_iterations_num(A, B))
+print("--Actual :", simple_actual_iterations)
 print()
 
 print("Zeydel meothod number of iterations")
-print(eq.infimum_iterations_num(error, Matrix.column_norm, 'zeydel'))
+print("--Infimum:", lin_iter.infimum_iterations_num(A, B, method='zeydel'))
+print("--Actual :", zeydel_actual_iterations)
+print()
+
+print("Indeed, formula gives overstated number of iterations")

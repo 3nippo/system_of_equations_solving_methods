@@ -1,4 +1,4 @@
-from matrix import Matrix
+from matrix import Matrix, Norm
 import math
 
 
@@ -19,16 +19,19 @@ class EigenThings:
         self.__sub_init__(A, error)
         return self.get_things()
 
-    def __calculate_things__(self, norm=Matrix.out_of_diagonal_norm):
+    def __calculate_things__(self, norm=Norm.out_of_diagonal_norm):
         A = self.__A.copy()
         error = self.__error
         m, n = A.shape()
 
         basis = Matrix(m, n)
+
         atan = math.atan
         cos = math.cos
         sin = math.sin
         pi = math.pi
+
+        iterations = 0
 
         while norm(A) > error:
             i, j = A.find(A.max())[0]
@@ -45,5 +48,13 @@ class EigenThings:
             basis = basis * U
             A = U.transpose() * A * U
 
+            iterations += 1
+
         self.__values  = [A[i][i] for i in range(min(m, n))]
         self.__vectors = [Matrix(m, 1, A.get_column(i)) for i in range(n)]
+        self.__iterations = iterations
+
+    def get_iterations(self):
+        if '__iterations' not in self.__dict__:
+            self.__calculate_things__()
+        return self.__iterations

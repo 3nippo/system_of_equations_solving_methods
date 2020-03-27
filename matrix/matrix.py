@@ -1,6 +1,7 @@
 import random
 import copy
 import math
+from collections import namedtuple
 
 
 class MatrixDimensionError(Exception):
@@ -17,6 +18,8 @@ class RowAssignmentError(Exception):
 
 
 class Matrix:
+    __Shape__ = namedtuple('MatrixShape', ['rows', 'columns'])
+
     def __init__(self, m=None, n=None, elems=None):
         n = n or m
 
@@ -33,11 +36,17 @@ class Matrix:
 
         self.__A = [[next(l_iter) for _ in range(n)] for _ in range(m)]
 
+    def to_list(self):
+        A = self
+        m, n = A.shape()
+
+        return [A[i][j] for i in range(m) for j in range(n)]
+
     def shape(self):
         A = self.__A
         if len(A) == 0:
-            return 0, 0
-        return len(A), len(A[0])
+            return Matrix.__Shape__(0, 0)
+        return Matrix.__Shape__(len(A), len(A[0]))
 
     def swap(self, swap_index_1, swap_index_2, axis=0):
         m, n = self.shape()
@@ -84,20 +93,22 @@ class Matrix:
 
         return result
 
-    @staticmethod
-    def column_norm(A):
-        norm = float('-inf')
+    def __call__(self, x):
+        A = self
+
         m, n = A.shape()
+        result = Matrix(m, n)
 
-        for i in range(n):
-            current = 0
+        if isinstance(x, (int, float)):
+            arg = [x]
+        else:
+            arg = x.to_list()
 
-            for j in range(m):
-                current += abs(A[j][i])
+        for i in range(m):
+            for j in range(n):
+                result[i][j] = A[i][j](arg)
 
-            norm = max(norm, current)
-
-        return norm
+        return result
 
     @staticmethod
     def unit_matrix(m, n=None):
@@ -174,8 +185,8 @@ class Matrix:
         return self.__A[i]
 
     def __setitem__(self, i, val):
-        if not isinstance(val, list) or self.shape()[1] != len(val):
-            raise RowAssignmentError(self.shape()[1])
+        if not isinstance(val, list) or self.shape().columns != len(val):
+            raise RowAssignmentError(self.shape().columns)
         self.__A[i] = val
 
     def get_column(self, i):
@@ -257,6 +268,11 @@ class Matrix:
 
         return res
 
+    def __neg__(self):
+        return Matrix(*self.shape(), [-el for el in self.to_list()])
+
+
+class Norm:
     @staticmethod
     def out_of_diagonal_norm(A):
         n, _ = A.shape()
@@ -268,6 +284,33 @@ class Matrix:
                 l_sum += A[i][j] * A[i][j]
 
         return math.sqrt(l_sum)
+
+    @staticmethod
+    def column_norm(A):
+        norm = float('-inf')
+        m, n = A.shape()
+
+        for i in range(n):
+            current = 0
+
+            for j in range(m):
+                current += abs(A[j][i])
+
+            norm = max(norm, current)
+
+        return norm
+
+    @staticmethod
+    def R_infinity_norm(V):
+        norm = float('-inf')
+        m, n = V.shape()
+
+        assert n == 1, 'Wrong usage'
+
+        for i in range(m):
+            norm = max(norm, abs(V[i][0]))
+
+        return norm
 
 
 class TriDiagonalMatrix(Matrix):

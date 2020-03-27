@@ -15,6 +15,9 @@ A = Matrix(3, elems = [-7, -6,  8,
 error = 0.000001
 values, vectors = EigenThings(A, error).get_things()
 
+print('Error:', error)
+print()
+
 print("Eigen values:")
 for v in values:
     print(v)

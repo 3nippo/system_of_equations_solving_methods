@@ -51,7 +51,7 @@ class EigenThings:
             iterations += 1
 
         self.__values  = [A[i][i] for i in range(min(m, n))]
-        self.__vectors = [Matrix(m, 1, A.get_column(i)) for i in range(n)]
+        self.__vectors = [Matrix(m, 1, basis.get_column(i)) for i in range(n)]
         self.__iterations = iterations
 
     def get_iterations(self):

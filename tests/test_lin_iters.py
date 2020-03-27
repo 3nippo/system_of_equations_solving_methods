@@ -5,7 +5,7 @@ sys.path.append('../iter_process')
 
 from matrix import Matrix
 from equation import Equation
-from iter_process import Linear
+from linear import Linear
 
 A = Matrix(4, elems = [28,  9,  -3, -7,
                        -5, 21,  -5, -3,

@@ -2,7 +2,7 @@ import sys
 sys.path.append('../iter_process')
 sys.path.append('../matrix')
 
-from iter_process import NonLinear
+from non_linear import NonLinear
 import matplotlib.pyplot as plt
 import math
 from matrix import Matrix

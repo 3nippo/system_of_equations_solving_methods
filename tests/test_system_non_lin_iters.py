@@ -2,7 +2,7 @@ import sys
 sys.path.append('../iter_process')
 sys.path.append('../matrix')
 
-from iter_process import NonLinear
+from non_linear import NonLinear
 import matplotlib.pyplot as plt
 import math
 from matrix import Matrix
@@ -72,10 +72,8 @@ def some_work(name, x_init, a_error, method_name, method_args):
 
     print("Given error: {}".format(a_error))
 
-    print(
-        "Answer:",
-        getattr(NonLinear(x_init, a_error), method_name)(*method_args).answer
-    )
+    print("Answer:")
+    print(getattr(NonLinear(x_init, a_error), method_name)(*method_args).answer)
 
     print()
 

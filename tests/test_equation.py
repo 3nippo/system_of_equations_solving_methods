@@ -1,8 +1,4 @@
-import sys
-sys.path.append('../matrix')
-sys.path.append('../equation')
-sys.path.append('../equation_tools')
-
+import context
 from matrix import Matrix
 from equation import Equation
 

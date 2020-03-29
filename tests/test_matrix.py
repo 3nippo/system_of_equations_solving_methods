@@ -1,6 +1,4 @@
-import sys
-sys.path.append('../matrix')
-
+import context
 from matrix import Matrix
 
 m1 = [ 4,  2,  3,  2,

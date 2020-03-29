@@ -1,9 +1,6 @@
-import sys
-sys.path.append('../matrix')
-sys.path.append('../equation_tools')
-
+import context
 from matrix import Matrix
-from equation_tools import EigenThings
+from equation.iter_process.eigen_things import EigenThings
 
 import matplotlib.pyplot as plt
 
@@ -12,8 +9,8 @@ A = Matrix(3, elems = [-7, -6,  8,
                         8, -7,  4]
 )
 
-error = 0.000001
-values, vectors = EigenThings(A, error).get_things()
+error = 2**(-20)
+(values, vectors), iterations = EigenThings(A, error).rotation_method()
 
 print('Error:', error)
 print()
@@ -29,10 +26,10 @@ for v in vectors:
 
 print("Check:")
 for val, vec in zip(values, vectors):
-    print("--Multiplication:")
+    print("--A * eigenvector:")
     print(A * vec, '\n')
-    print("--Value")
-    print(val, '\n')
+    print("--eigenvalue * eigenvector")
+    print(vec * val, '\n')
 
 errors = [2**i for i in range(5, -15, -1)]
 x = []
@@ -40,7 +37,7 @@ y = []
 
 for error in errors:
     y.append(error)
-    x.append(EigenThings(A, error).get_iterations())
+    x.append(EigenThings(A, error).rotation_method().iterations)
 
 plt.plot(x, y)
 plt.xlabel('iterations')

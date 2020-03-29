@@ -1,11 +1,7 @@
-import sys
-sys.path.append('../matrix')
-sys.path.append('../equation')
-sys.path.append('../iter_process')
-
+import context
 from matrix import Matrix
 from equation import Equation
-from linear import Linear
+from equation.iter_process.linear import Linear
 
 A = Matrix(4, elems = [28,  9,  -3, -7,
                        -5, 21,  -5, -3,

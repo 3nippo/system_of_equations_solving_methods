@@ -1,10 +1,11 @@
 from matrix import Matrix, Norm
-from equation.iter_process import __IterProcess__
+from matrix.utility_matrices import Householder
 import math
 import cmath
 from collections import namedtuple
 from equation.decomp import QRDecomp
 from equation import Equation
+from equation.iter_process import __IterProcess__
 
 
 class EigenThings(__IterProcess__):
@@ -49,12 +50,17 @@ class EigenThings(__IterProcess__):
         )
 
     def qr_algorithm(self):
+        save_init   = self.init_x
+        self.init_x = Householder.to_hessenberg(self.init_x)
+
         answer = self.__iter_process__(
             EigenThings.__GetCurrent__.qr_algorithm,
             [QRDecomp],
             EigenThings.__GetDifference__.qr_algorithm,
             [self.error, [False] * min(*self.init_x.shape())]
         )
+
+        self.init_x = save_init
 
         result_type = type(answer)
 

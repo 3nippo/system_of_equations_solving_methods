@@ -1,5 +1,5 @@
 from matrix import Matrix
-import math
+from matrix.utility_matrices import Householder
 
 
 class __IDecomposition__:
@@ -116,19 +116,6 @@ class LUDecomp(__IDecomposition__):
 
 
 class QRDecomp(__IDecomposition__):
-    @staticmethod
-    def __Householder_matrix__(V):
-        m, n = V.shape()
-
-        assert n == 1, "V should be vector"
-
-        VT = V.transpose()
-
-        scalar_product = (VT * V).to_val()
-        matrix = V * VT
-
-        return Matrix.unit_matrix(m) - 2 / scalar_product * matrix
-
     def empty(self):
         return 'Q' not in self.__dict__
 
@@ -146,25 +133,7 @@ class QRDecomp(__IDecomposition__):
         Q = Matrix.unit_matrix(m)
 
         for i in range(min(m, n)):
-            vec_elems = [0 for _ in range(i)]
-
-            norm = 0
-
-            for j in range(i, m):
-                norm += R[j][i] * R[j][i]
-
-            norm = math.sqrt(norm)
-
-            vec_elems.append(
-                R[i][i] + norm * (-1 if R[i][i] < 0 else 1)
-            )
-
-            for j in range(i + 1, m):
-                vec_elems.append(R[j][i])
-
-            H = QRDecomp.__Householder_matrix__(
-                Matrix(m, 1, vec_elems)
-            )
+            H = Householder.gauss_method(R, i)
 
             Q = Q * H
             R = H * R

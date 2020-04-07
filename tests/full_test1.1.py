@@ -1,6 +1,7 @@
 import context
 from matrix import Matrix
-from equation import Equation, LUDecomposition
+from equation import Equation
+from equation.decomp import LUDecomp
 
 A = Matrix(4, elems = [-7,  3, -4,  7,
                         8, -1, -7,  6,
@@ -10,7 +11,7 @@ A = Matrix(4, elems = [-7,  3, -4,  7,
 B = Matrix(1, 4, [-126, 29, 27, 34])
 B = B.transpose()
 
-lu = LUDecomposition(A, B)
+lu = LUDecomp(A, B)
 eq = Equation(A, B, lu)
 X = eq.analytic_solution()
 
@@ -29,7 +30,7 @@ print("Determinant:")
 print(lu.det())
 print()
 
-inv = lu.inverse_matrix()
+inv = lu.inverse_matrix(Equation)
 print("Inverse matrix:")
 print(inv)
 print()

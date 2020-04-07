@@ -40,6 +40,13 @@ class Matrix:
 
         return [A[i][j] for i in range(m) for j in range(n)]
 
+    def to_val(self):
+        m, n = self.shape()
+
+        assert m == 1 and n == 1, "Matrix is not of (1, 1)-shape"
+
+        return self[0][0]
+
     def shape(self):
         A = self.__A
         if len(A) == 0:
@@ -252,6 +259,9 @@ class Matrix:
 
         return res
 
+    def __rmul__(self, b):
+        return self * b
+
     def __add__(self, b):
         m, n = self.shape()
         b_m, b_n = b.shape()
@@ -320,12 +330,25 @@ class Norm:
         norm = float('-inf')
         m, n = V.shape()
 
-        assert n == 1, 'Wrong usage'
+        assert n == 1, 'V should be vector'
 
         for i in range(m):
             norm = max(norm, abs(V[i][0]))
 
         return norm
+
+    @staticmethod
+    def R_2_norm(V):
+        m, n = V.shape()
+
+        assert n == 1, 'V should be vector'
+
+        l_sum = 0
+
+        for i in range(m):
+            l_sum = V[i][0] * V[i][0]
+
+        return math.sqrt(l_sum)
 
 
 class TriDiagonalMatrix(Matrix):

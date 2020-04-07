@@ -1,111 +1,6 @@
 import copy
 from matrix import Matrix, TriDiagonalMatrix
-
-
-class LUDecomposition:
-    class CalledBeforeLUError(Exception):
-        def __str__(self):
-            return "LU matrix has not been constructed yet"
-
-    class EmptyMatrixError(Exception):
-        def __str__(self):
-            return "Given empty matrix of shape (0, 0)"
-
-    def __init__(self, A=None, B=None):
-        if A is None:
-            self.__LU = None
-            return
-        self.decomp(A, B)
-
-    def get_LU(self):
-        if self.empty():
-            raise LUDecomposition.CalledBeforeLUError
-
-        if self.__B:
-            return self.__LU, self.__B
-        return self.__LU, None
-
-    def empty(self):
-        return self.__LU is None
-
-    def decomp(self, A, _B=None):
-        if A.shape().rows == 0:
-            raise LUDecomposition.EmptyMatrixError
-
-        self.__A = A.copy()
-        B = self.__B = _B.copy() if _B else None
-
-        n, _ = A.shape()
-        LU = self.__LU = A.copy()
-
-        # save permutations for possible usage
-        perms = [(i, i) for i in range(n)]
-        perms = self.__perms = dict(perms)
-        perms_count = 0
-
-        for k in range(n):
-            max_row = LU.get_index_abs_max(k, k, 1)
-
-            if LU[max_row][k] > LU[k][k]:
-                perms_count += 1
-
-                LU.swap(k, max_row, 0)
-                perms[k], perms[max_row] = perms[max_row], perms[k]
-
-                if B:
-                    B.swap(k, max_row, 0)
-
-            for i in range(k + 1, n):
-                mu = LU[i][k] / LU[k][k]
-
-                for j in range(k, n):
-                    LU[i][j] -= mu * LU[k][j]
-
-                LU[i][k] = mu
-
-        self.__perms_count = perms_count
-
-        return self.get_LU()
-
-    def set_permuted_B(self, B):
-        m, n = B.shape()
-        res = self.__B = Matrix(m, n)
-
-        for i in range(m):
-            res[i] = B[self.__perms[i]]
-
-    # determinant
-    def det(self):
-        if self.empty():
-            raise LUDecomposition.CalledBeforeLUError
-
-        det = 1
-        LU = self.__LU
-
-        for i in range(LU.shape().rows):
-            det *= LU[i][i]
-
-        return det * (-1 if self.__perms_count % 2 else 1)
-
-    def inverse_matrix(self, equation=None):
-        if self.empty():
-            raise LUDecomposition.CalledBeforeLUError
-
-        A = self.__A
-
-        equation = equation or Equation()
-
-        previous_B = self.__B
-
-        new_B = Matrix.unit_matrix(A.shape().rows)
-        self.set_permuted_B(new_B)
-
-        equation.load_data(A, new_B, self)
-        result = equation.analytic_solution()
-
-        self.__B = previous_B
-
-        return result
+from equation.decomp import LUDecomp
 
 
 class Equation:
@@ -119,12 +14,12 @@ class Equation:
         if A is None:
             return
 
-        self.__decomp = decomp or LUDecomposition()
+        self.__decomp = decomp or LUDecomp()
         self.__A = A.copy()
         self.__B = B.copy()
 
     def load_data(self, A, B, decomp=None):
-        self.__decomp = decomp or LUDecomposition()
+        self.__decomp = decomp or LUDecomp()
         self.__A = A.copy()
         self.__LU = None
         self.__B = B.copy()

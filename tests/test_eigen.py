@@ -15,12 +15,12 @@ error = 2**(-20)
 print('Error:', error)
 print()
 
-print("Eigen values:")
+print("Eigenvalues:")
 for v in values:
     print(v)
 print()
 
-print("Eigen vectors:")
+print("Eigenvectors:")
 for v in vectors:
     print(v, '\n')
 

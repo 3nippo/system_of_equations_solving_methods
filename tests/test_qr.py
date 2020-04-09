@@ -59,6 +59,6 @@ for error in errors:
 plt.plot(x, y)
 plt.xlabel('iterations')
 plt.ylabel('error')
-plt.title('Error -- Number of iterations\n dependece')
+plt.title('Error -- Number of iterations\n dependence')
 
 plt.show()

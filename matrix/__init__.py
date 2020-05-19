@@ -353,6 +353,7 @@ class Norm:
 
 class TriDiagonalMatrix(Matrix):
     def __init__(self, m=None, elems=None):
+        elems = [0] + elems + [0]
         super().__init__(m, 3, elems)
 
     def to_Matrix(self):

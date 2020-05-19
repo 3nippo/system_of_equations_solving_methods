@@ -2,11 +2,11 @@ import context
 from matrix import Matrix, TriDiagonalMatrix
 from equation import Equation
 
-elems = [ 0, -7, -6,
+elems = [    -7, -6,
           6, 12,  0,
          -3,  5,  0,
          -9, 21,  8,
-         -5, -6,  0]
+         -5, -6     ]
 
 triA = TriDiagonalMatrix(5, elems)
 

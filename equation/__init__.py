@@ -84,15 +84,10 @@ class Equation:
         X = Matrix(m, n)
 
         for k in range(n):
-            a = 0
-            b = A[0][1]
-            c = A[0][2]
-            d = B[0][k]
+            P = [0]
+            Q = [0]
 
-            P = [-c / b]
-            Q = [ d / b]
-
-            for i in range(1, m - 1):
+            for i in range(m - 1):
                 a = A[i][0]
                 b = A[i][1]
                 c = A[i][2]
@@ -116,6 +111,6 @@ class Equation:
             X[m - 1][k] = q
 
             for i in range(m - 2, -1, -1):
-                X[i][k] = P[i] * X[i + 1][k] + Q[i]
+                X[i][k] = P[i + 1] * X[i + 1][k] + Q[i + 1]
 
         return X

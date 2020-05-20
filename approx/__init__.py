@@ -1,17 +1,20 @@
 from collections import namedtuple
 import copy
 import math
+from matrix import Matrix, TriDiagonalMatrix
+from equation import Equation
+from bisect import bisect_left
 
 
 class __IApprox__:
-    def __init__(self, X, Y):
+    def __init__(self, X=None, Y=None):
         self.__coefs = []
         pass
 
     def get_coefs(self):
         return copy.copy(self.__coefs)
 
-    def set_table(self, X, Y):
+    def set_table(self, X, Y, *args):
         pass
 
     def __call__(self, x):
@@ -23,6 +26,7 @@ class __IApprox__:
 
 class Lagrange(__IApprox__):
     def __init__(self, X=None, Y=None):
+        super().__init__()
         if X:
             self.set_table(X, Y)
 
@@ -72,6 +76,7 @@ class Newton(__IApprox__):
             return Newton.__DivDiff__(self.x, self.y)
 
     def __init__(self, X=None, Y=None):
+        super().__init__()
         if X:
             self.set_table(X, Y)
 
@@ -120,5 +125,144 @@ class Newton(__IApprox__):
         for i in range(1, len(f)):
             mult *= (x - self.__X[i - 1])
             sum += f[i] * mult
+
+        return sum
+
+
+class CubicSpline(__IApprox__):
+    def __init__(self, X=None, Y=None):
+        super().__init__()
+        if X:
+            self.set_table(X, Y)
+
+    def set_table(self, X, Y):
+        X = copy.copy(X)
+        Y = copy.copy(Y)
+
+        l = list(zip(X, Y))
+
+        l = sorted(l, key=lambda x: x[0])
+
+        X, Y = map(list, zip(*l))
+
+        self.__X = X
+        self.__Y = Y
+
+        self.__build_func__()
+
+    def __build_func__(self):
+        X = self.__X
+        Y = self.__Y
+
+        h = [X[i] - X[i-1] for i in range(1, len(X))]
+
+        A_elems = [2 * (h[0] + h[1]), h[1]]
+        B_elems = [3 * ((Y[2] - Y[1]) / h[1] - (Y[1] - Y[0]) / h[0])]
+
+        for i in range(2, len(h) - 1):
+            A_elems.append(h[i-1])
+            A_elems.append(2 * (h[i-1] + h[i]))
+            A_elems.append(h[i])
+
+            B_elems.append(3 * ((Y[i+1] - Y[i]) / h[i] - (Y[i] - Y[i-1]) / h[i-1]))
+
+        A_elems.append(h[-2])
+        A_elems.append(2 * (h[-2] + h[-1]))
+
+        B_elems.append(3 * ((Y[-1] - Y[-2]) / h[-1] - (Y[-2] - Y[-3]) / h[-2]))
+
+        triA = TriDiagonalMatrix(len(h) - 1, A_elems)
+        B = Matrix(len(h) - 1, 1, B_elems)
+
+        tri_equation = Equation(triA, B)
+        tri_solution = tri_equation.sweep_method()
+
+        a = Y[:-1]
+
+        c = [0]
+        c.extend(tri_solution.to_list())
+
+        b = []
+        d = []
+        for i in range(len(h) - 1):
+            b.append((Y[i+1] - Y[i]) / h[i] - 1 / 3 * h[i] * (c[i+1] + 2 * c[i]))
+
+            d.append((c[i+1] - c[i]) / 3 / h[i])
+
+        b.append((Y[-1] - Y[-2]) / h[-1] - 2 / 3 * h[-1] * c[-1])
+
+        d.append(-c[-1] / 3 / h[-1])
+
+        self.__a = a
+        self.__b = b
+        self.__c = c
+        self.__d = d
+
+    def __call__(self, x):
+        a = self.__a
+        b = self.__b
+        c = self.__c
+        d = self.__d
+        X = self.__X
+
+        if x > X[-1]:
+            i = len(a) - 1
+        elif x <= X[0]:
+            i = 0
+        else:
+            i = bisect_left(X, x) - 1
+
+        return a[i] + b[i] * (x - X[i]) + c[i] * (x - X[i])**2 + d[i] * (x - X[i])**3
+
+
+class LeastSquares(__IApprox__):
+    def __init__(self, X=None, Y=None, n=1):
+        super().__init__()
+        self.set_table(X, Y, n)
+
+    def set_table(self, X, Y, n):
+        self.__X = copy.copy(X)
+        self.__Y = copy.copy(Y)
+        self.__n = n
+
+        A_elems = []
+        B_elems = []
+
+        for k in range(n+1):
+            for i in range(n+1):
+                coef = 0
+
+                for x in X:
+                    coef += x**(k+i)
+
+                A_elems.append(coef)
+
+            b = 0
+
+            for x, y in zip(X, Y):
+                b += y * x**k
+
+            B_elems.append(b)
+
+        A = Matrix(n+1, elems=A_elems)
+        B = Matrix(n+1, 1, B_elems)
+
+        eq = Equation(A, B)
+
+        self.__a = eq.analytic_solution().to_list()
+
+    def __call__(self, x):
+        sum = 0
+
+        for i in range(self.__n+1):
+            sum += self.__a[i] * x**i
+
+        return sum
+
+    def squared_error(self):
+        sum = 0
+
+        for x, y in zip(self.__X, self.__Y):
+            sum += (self(x) - y)**2
 
         return sum

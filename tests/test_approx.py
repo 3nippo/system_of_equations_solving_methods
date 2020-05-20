@@ -29,7 +29,7 @@ def get_vals_to_draw(f, X, step=0.1):
 
 
 def test_method(method_class, X, Y, func):
-    print(method.__name__)
+    print(method_class.__name__)
 
     for X_row, Y_row in zip(X, Y):
         print()
@@ -39,7 +39,7 @@ def test_method(method_class, X, Y, func):
 
         f = method_class(X_row, Y_row)
 
-        for x, y in zip(X_row, Y_row):
+        for x in X_row:
             print(f"x = {x}")
             print(f"Actual value: {func(x)}")
             print(f"Approxed value: {f(x)}")

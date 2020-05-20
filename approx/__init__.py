@@ -266,3 +266,73 @@ class LeastSquares(__IApprox__):
             sum += (self(x) - y)**2
 
         return sum
+
+
+def choose_point(X, x):
+    if x > X[-1]:
+        return len(X) - 1, len(X) - 1
+
+    if x < X[0]:
+        return 0, 0
+
+    i = bisect_left(X, x)
+
+    if x == X[i]:
+        return i
+
+    return i - 1, i
+
+
+def first_derivative(X, Y, x):
+    i = choose_point(X, x)
+
+    if type(i) == tuple:
+        l, r = i
+        accuracy_1 = (Y[r] - Y[l]) / (X[r] - X[l])
+
+        if r + 1 == len(X):
+            accuracy_2 = None
+        else:
+            numerator = (Y[r+1] - Y[r])/(X[r+1] - X[r]) - (Y[r] - Y[l])/(X[r] - X[l])
+            accuracy_2 = (Y[i+1] - Y[i])/(X[i+1]-X[i]) + numerator / (X[r + 1] - X[l])*(2*x-X[i]-X[i+1])
+    else:
+        if i - 1 == -1:
+            from_left = None
+        else:
+            from_left = (Y[i] - Y[i - 1]) / (X[i] - X[i - 1])
+
+        if i + 1 == len(X):
+            from_right = None
+        else:
+            from_right = (Y[i + 1] - Y[i]) / (X[i + 1] - X[i])
+
+        accuracy_1 = from_left, from_right
+
+        if not (from_left or from_right):
+            accuracy_2 = None
+        else:
+            numerator = (Y[i+1] - Y[i])/(X[i+1] - X[i]) - (Y[i] - Y[i-1])/(X[i] - X[i-1])
+            accuracy_2 = (Y[i+1] - Y[i])/(X[i+1]-X[i]) + numerator / (X[i + 1] - X[i - 1])*(2*x-X[i]-X[i+1])
+
+    return accuracy_1, accuracy_2
+
+
+def second_derivative(X, Y, x):
+    i = choose_point(X, x)
+
+    if type(i) == tuple:
+        l, r = i
+
+        if r + 1 == len(X):
+            answer = None
+        else:
+            numerator = (Y[r+1] - Y[r])/(X[r+1] - X[r]) - (Y[r] - Y[l])/(X[r] - X[l])
+            answer = 2 * numerator / (X[r + 1] - X[l])
+    else:
+        if i - 1 == -1 or i + 1 == len(X):
+            answer = None
+        else:
+            numerator = (Y[i+1] - Y[i])/(X[i+1] - X[i]) - (Y[i] - Y[i-1])/(X[i] - X[i-1])
+            answer = 2 * numerator / (X[i + 1] - X[i - 1])
+
+    return answer

@@ -7,7 +7,7 @@ from bisect import bisect_left
 
 
 class __IApprox__:
-    def __init__(self, X=None, Y=None):
+    def __init__(self, X=None, Y=None, **kwargs):
         self.__coefs = []
         pass
 
@@ -336,3 +336,89 @@ def second_derivative(X, Y, x):
             answer = 2 * numerator / (X[i + 1] - X[i - 1])
 
     return answer
+
+
+class Integral(__IApprox__):
+    def __init__(self, start=None, end=None, func=None):
+        super().__init__()
+        self.start = start
+        self.end = end
+        self.func = func
+
+    def set_table(self, step, start=None, end=None):
+        if start:
+            self.start = start
+            self.end = end
+
+        self.__X = []
+        cur_pos = self.start
+
+        while cur_pos <= self.end:
+            self.__X.append(cur_pos)
+            cur_pos += step
+
+    def rectangle_method(self, step):
+        sum = 0
+        X = self.__X
+        func = self.func
+
+        for i in range(1, len(X)):
+            middle = (X[i] + X[i-1]) / 2
+            sum += func(middle)
+
+        return sum * step
+
+    @staticmethod
+    def get_abs_max(func, start, end, step=0.1):
+        Y = []
+        pos = start
+        while pos <= start:
+            Y.append(func(pos))
+            pos += step
+
+        Y = list(map(abs, Y))
+
+        return max(Y)
+
+    def rectangle_error(self, der, step):
+        max = Integral.get_abs_max(der, self.start, self.end)
+        return max * step * step * (self.end - self.start) / 24
+
+    def trapeze_error(self, der, step):
+        max = Integral.get_abs_max(der, self.start, self.end)
+        return max * step * step * (self.end - self.start) / 12
+
+    def Simpson_error(self, der, step):
+        max = Integral.get_abs_max(der, self.start, self.end)
+        return max * step**4 * (self.end - self.start) / 180
+
+    def trapeze_method(self, step):
+        sum = 0
+        X = self.__X
+        func = self.func
+
+        for i in range(1, len(X)):
+            sum += func(X[i]) + func(X[i-1])
+
+        return sum * step / 2
+
+    def Simpson_method(self, step):
+        sum = 0
+        X = self.__X
+        func = self.func
+
+        for i in range(1, len(X), 2):
+            sum += func(X[i-1]) + 4*func(X[i]) + func(X[i+1])
+
+        return sum * step / 3
+
+    def RungeRomberg_method(self, method, step, k):
+        self.set_table(step)
+        Fs = getattr(self, method)(step)
+
+        self.set_table(step*k)
+        Fsk = getattr(self, method)(step*k)
+
+        p = 2 if method == 'Simpson_method' else 2
+
+        return Fs + (Fs - Fsk) / (k**p - 1), step**(p+1)

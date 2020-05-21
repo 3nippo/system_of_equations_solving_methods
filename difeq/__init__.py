@@ -1,4 +1,7 @@
 import pandas as pd
+import matrix
+import equation
+import math
 
 
 class Cauchy:
@@ -206,3 +209,165 @@ class Cauchy:
                 pos[i] = pos_[i] + step / 24 * mult
 
             return pos
+
+
+class BoundaryVals:
+    def __init__(self, a, b, step, f_true):
+        self.a = a
+        self.b = b
+        self.step = step
+        self.f_true = f_true
+
+    def shooting_method(self,
+                        left_vals,
+                        missing_num,
+                        difference,
+                        eps,
+                        equations,
+                        names=['y', 'z']):
+        h_curr = 0.8
+        conds = left_vals.copy()
+
+        conds[missing_num] = h_curr
+
+        obj = Cauchy(
+            conds,
+            self.a,
+            self.b,
+            self.step,
+            self.f_true
+        )
+
+        vals = obj.Runge_Kutta(equations, names=names).iloc[-1]
+
+        last_error = difference(vals)
+
+        h_last = h_curr
+        h_curr = 1
+
+        while True:
+            conds[missing_num] = h_curr
+
+            obj = Cauchy(
+                conds,
+                self.a,
+                self.b,
+                self.step,
+                self.f_true
+            )
+
+            vals = obj.Runge_Kutta(equations, names=names).iloc[-1]
+
+            curr_error = difference(vals)
+
+            if curr_error < eps:
+                break
+
+            h_curr, h_last = h_curr - (h_curr - h_last) / (curr_error - last_error) * curr_error, h_curr
+
+        return obj.Runge_Kutta(equations, names=names)
+
+    def finite_difference(self,
+                          y_a,
+                          y_b,
+                          der_a,
+                          der_b,
+                          p,
+                          q,
+                          f,
+                          eps=0.00001,
+                          a_coefs=None,
+                          b_coefs=None):
+        h = self.step
+        N = (self.b - self.a) / h
+        N = math.floor(N)
+
+        A_elems = []
+        B_elems = []
+
+        pos = self.a + h
+
+        if der_a:
+            if a_coefs:
+                A_elems.extend(a_coefs)
+            else:
+                A_elems.extend([-1/h, 1/h])
+
+            A_elems.append(1 - p(pos)*h/2)
+
+            B_elems.append(y_a)
+
+        A_elems.extend([-2+h*h*q(pos), 1+p(pos)*h/2])
+
+        B_elems.append(h*h*f(pos))
+
+        if not der_a:
+            B_elems[-1] -= y_a*(1 - p(pos)*h/2)
+
+        pos += h
+
+        for k in range(2, N-1):
+            A_elems.append(1 - p(pos)*h/2)
+            A_elems.append(-2 + h*h*q(pos))
+            A_elems.append(1 + p(pos)*h/2)
+
+            B_elems.append(h*h*f(pos))
+
+            pos += h
+
+        A_elems.extend([1-p(pos)*h/2, -2+h*h*q(pos)])
+
+        if der_b:
+            A_elems.append(1+p(pos)*h/2)
+            B_elems.append(h*h*f(pos))
+
+            if b_coefs:
+                A_elems.extend(b_coefs)
+            else:
+                A_elems.extend([-1/h, 1/h])
+            B_elems.append(y_b)
+        else:
+            B_elems.append(h*h*f(pos) - y_b*(1+p(pos)*h/2))
+
+        n = N-4+1+2+der_a+der_b
+
+        applicable = abs(A_elems[0]) > abs(A_elems[1])
+
+        for i in range(2, len(A_elems) - 2, 3):
+            inner = abs(A_elems[i+1]) > abs(A_elems[i]) + abs(A_elems[i+2])
+            applicable = applicable and inner
+
+        applicable = applicable and abs(A_elems[-1]) > abs(A_elems[-2])
+
+        triA = matrix.TriDiagonalMatrix(n, A_elems)
+        B = matrix.Matrix(n, 1, B_elems)
+
+        if applicable:
+            print("Sweep method is applicable")
+
+            tri_equation = equation.Equation(triA, B)
+            y = tri_equation.sweep_method().to_list()
+        else:
+            print("Sweep method is not applicable")
+
+            A = triA.to_Matrix()
+            simple_equation = equation.Equation(A, B)
+
+            y = simple_equation.analytic_solution().to_list()
+
+        if not der_a:
+            y.insert(0, y_a)
+
+        if not der_b:
+            y.append(y_b)
+
+        x = []
+        pos = self.a
+        while abs(pos - self.b) > eps:
+            x.append(pos)
+            pos += h
+        x.append(pos)
+
+        y_true = [self.f_true(el) for el in x]
+
+        return pd.DataFrame(zip(x, y, y_true), columns=['x', 'y', 'true_y'])

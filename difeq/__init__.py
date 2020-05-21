@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-class DifEq:
+class Cauchy:
     def __init__(self, Points, a, b, step, f_true):
         self.Points = Points
         self.a = a
@@ -90,7 +90,7 @@ class DifEq:
     def Euler(self, *args, **kwargs):
         self.__p = 1
         return self.__solve__(
-            DifEq.__Update_pos__.Euler,
+            Cauchy.__Update_pos__.Euler,
             *args,
             **kwargs
         )
@@ -98,7 +98,7 @@ class DifEq:
     def Runge_Kutta(self, *args, **kwargs):
         self.__p = 4
         return self.__solve__(
-            DifEq.__Update_pos__.Runge_Kutta,
+            Cauchy.__Update_pos__.Runge_Kutta,
             *args,
             **kwargs
         )
@@ -131,7 +131,7 @@ class DifEq:
         kwargs['custom_init'] = custom_init
 
         return self.__solve__(
-            DifEq.__Update_pos__.Adams,
+            Cauchy.__Update_pos__.Adams,
             *args,
             help_values,
             **kwargs

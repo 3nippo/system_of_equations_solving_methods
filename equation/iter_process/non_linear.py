@@ -24,6 +24,14 @@ class NonLinear(__IterProcess__):
             [norm]
         )
 
+    def dichotomy(self, func_vec):
+        return self.__iter_process__(
+            NonLinear.__GetCurrent__.dichotomy,
+            [func_vec],
+            lambda _, x_current: abs(x_current[0] - x_current[1]),
+            []
+        )
+
     # all funcs should take x_last first
     class __GetCurrent__:
         @staticmethod
@@ -38,3 +46,13 @@ class NonLinear(__IterProcess__):
         @staticmethod
         def simple_iteration(last, reduced_func_vec):
             return reduced_func_vec(last)
+
+        @staticmethod
+        def dichotomy(last, func_vec):
+            l, r = last
+            mid = (l+r)/2
+            mid_val = func_vec([mid])
+
+            if mid_val * func_vec([l]) > 0:
+                return (mid, r)
+            return (l, mid)

@@ -2,6 +2,7 @@ import pandas as pd
 import matrix
 import equation
 import math
+from equation.iter_process.non_linear import NonLinear
 
 
 class Cauchy:
@@ -285,7 +286,7 @@ class BoundaryVals:
         A_elems = []
         B_elems = []
 
-        pos = self.a + h
+        pos = self.a
 
         if der_a:
             if a_coefs:
@@ -293,9 +294,12 @@ class BoundaryVals:
             else:
                 A_elems.extend([-1/h, 1/h])
 
-            A_elems.append(1 - p(pos)*h/2)
-
             B_elems.append(y_a)
+
+        pos += h
+
+        if der_a:
+            A_elems.append(1 - p(pos)*h/2)
 
         A_elems.extend([-2+h*h*q(pos), 1+p(pos)*h/2])
 
@@ -340,17 +344,23 @@ class BoundaryVals:
         applicable = applicable and abs(A_elems[-1]) > abs(A_elems[-2])
 
         triA = matrix.TriDiagonalMatrix(n, A_elems)
+        A = triA.to_Matrix()
         B = matrix.Matrix(n, 1, B_elems)
+
+        self.A = A
+        self.B = B
 
         if applicable:
             print("Sweep method is applicable")
+            print()
 
             tri_equation = equation.Equation(triA, B)
             y = tri_equation.sweep_method().to_list()
         else:
-            print("Sweep method is not applicable")
+            print("Sweep method is not applicable as there is no diagonal prevalence")
+            print("LU decomposition and two pass are used")
+            print()
 
-            A = triA.to_Matrix()
             simple_equation = equation.Equation(A, B)
 
             y = simple_equation.analytic_solution().to_list()
@@ -371,3 +381,112 @@ class BoundaryVals:
         y_true = [self.f_true(el) for el in x]
 
         return pd.DataFrame(zip(x, y, y_true), columns=['x', 'y', 'true_y'])
+
+
+class Volterra2:
+    class OutOfSegmentError(Exception):
+        def __str__(self):
+            return "Following x_i is out of segment"
+
+    def __init__(self,
+                 K,
+                 f,
+                 A,
+                 a,
+                 b,
+                 h=0.1,
+                 eps=0.000000001):
+        self.K = K
+        self.f = f
+        self.A = A
+        self.a = a
+        self.b = b
+        self.h = h
+        self.eps = eps
+
+        self.y = [[f(a)]]
+        self.i = 1
+        self.N = int((self.b - self.a) / h)
+
+    def __calc_c__(self, c, answer, j=0):
+        if j == len(self.y):
+            answer.append(c)
+            return
+
+        for y in self.y[j]:
+            self.__calc_c__(
+                    c + self.A(j) * self.K(
+                        self.a + self.i * self.h,
+                        self.a + j * self.h,
+                        y
+                    ),
+                    answer,
+                    j + 1
+            )
+
+    def next_equation(self):
+        if self.i > self.N:
+            raise Volterra2.OutOfSegmentError
+
+        c = []
+        x = self.a + self.i * self.h
+
+        self.__calc_c__(
+            self.f(x),
+            c
+        )
+
+        self.i += 1
+
+        return self.i - 1, x, self.A(self.i - 1), c
+
+    # methods --- list of names
+    # datas --- list of inputs (init_x + data for method)
+    # init_x for dichotomy is tuple (a, b)
+    # where a and b are line borders
+    def solve_current(self, methods, datas):
+        if self.i > self.N:
+            raise Volterra2.OutOfSegmentError
+
+        new_ys = []
+
+        for method, data in zip(methods, datas):
+            solver = NonLinear(data[0], self.eps)
+
+            new_y = getattr(solver, method)(*data[1:]).answer
+
+            if method == 'dichotomy':
+                new_y = (new_y[0] + new_y[1]) / 2
+            new_ys.append(new_y)
+
+        self.y.append(new_ys)
+
+    def solve_all(self, init_x, method):
+        for i in range(1, self.N + 1):
+            _, x, A, c = self.next_equation()
+
+            self.solve_current(
+                [method],
+                [(
+                    init_x,
+                    lambda y: y[0] - A * self.K(x, x, y[0]) - c[0]
+                )]
+            )
+
+    def __construct_solutions__(self, answer, con=None, i=0):
+        if not con:
+            con = []
+
+        if i == len(self.y):
+            answer.append(list(con))
+            return
+
+        for y in self.y[i]:
+            con.append(y)
+            self.__construct_solutions__(answer, con, i+1)
+            con.pop()
+
+    def get_solutions(self):
+        y = []
+        self.__construct_solutions__(y)
+        return y

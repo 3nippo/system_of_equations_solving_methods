@@ -19,7 +19,7 @@ a = 0
 b = 1
 h = 0.1
 
-obj = Cauchy([0, 1], a, b, h, f_true)
+obj = Cauchy([1 + math.sin(1), 0], a, b, h, f_true)
 
 print(f"a = {a}")
 print(f"b = {b}")

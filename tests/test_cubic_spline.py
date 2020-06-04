@@ -22,18 +22,22 @@ def test_method(method_class, X, Y):
     print(method_class.__name__)
 
     for X_row, Y_row in zip(X, Y):
-        print()
         print(f"X = {X_row}")
         print("*"*15)
         print()
 
         f = method_class(X_row, Y_row)
 
-        for x, y in zip(X_row, Y_row):
-            print(f"x = {x}")
-            print(f"Actual value: {y}")
-            print(f"Approxed value: {f(x)}")
-            print()
+        f.print_coefs()
+        print()
+
+        print("System of equations Ax=b")
+        print("A")
+        print(f.triA.to_Matrix())
+        print()
+        print("b")
+        print(f.B)
+        print()
 
         more_X, approx_Y = get_vals_to_draw(f, X_row)
 

@@ -59,6 +59,11 @@ class Lagrange(__IApprox__):
 
         return sum
 
+    def print_coefs(self):
+        for i, k in enumerate(self.__coefs):
+            print(f"k_{i} = {k}")
+        print()
+
 
 class Newton(__IApprox__):
     """
@@ -74,6 +79,11 @@ class Newton(__IApprox__):
 
         def __copy__(self):
             return Newton.__DivDiff__(self.x, self.y)
+
+    def print_coefs(self):
+        for i, k in enumerate(self.__coefs):
+            print(f"k_{i} = {k}")
+        print()
 
     def __init__(self, X=None, Y=None):
         super().__init__()
@@ -174,6 +184,9 @@ class CubicSpline(__IApprox__):
         triA = TriDiagonalMatrix(len(h) - 1, A_elems)
         B = Matrix(len(h) - 1, 1, B_elems)
 
+        self.triA = triA
+        self.B = B
+
         tri_equation = Equation(triA, B)
         tri_solution = tri_equation.sweep_method()
 
@@ -197,6 +210,18 @@ class CubicSpline(__IApprox__):
         self.__b = b
         self.__c = c
         self.__d = d
+
+    def print_coefs(self):
+        X = self.__X
+        for i in range(len(self.__a)):
+            print(f"Interval [{X[i]}; {X[i+1]}]")
+            print()
+
+            print(f"a = {self.__a[i]}")
+            print(f"b = {self.__b[i]}")
+            print(f"c = {self.__c[i]}")
+            print(f"d = {self.__d[i]}")
+            print()
 
     def __call__(self, x):
         a = self.__a
@@ -247,9 +272,17 @@ class LeastSquares(__IApprox__):
         A = Matrix(n+1, elems=A_elems)
         B = Matrix(n+1, 1, B_elems)
 
+        self.A = A
+        self.B = B
+
         eq = Equation(A, B)
 
         self.__a = eq.analytic_solution().to_list()
+
+    def print_coefs(self):
+        for i, k in enumerate(self.__a):
+            print(f"k_{i} = {k}")
+        print()
 
     def __call__(self, x):
         sum = 0
@@ -419,6 +452,6 @@ class Integral(__IApprox__):
         self.set_table(step*k)
         Fsk = getattr(self, method)(step*k)
 
-        p = 2 if method == 'Simpson_method' else 2
+        p = 4 if method == 'Simpson_method' else 2
 
         return Fs + (Fs - Fsk) / (k**p - 1), step**(p+1)

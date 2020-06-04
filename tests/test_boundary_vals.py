@@ -53,6 +53,10 @@ print(obj.shooting_method(
 ))
 print()
 
+obj.step = 0.05
+
+print(f"step = {obj.step}")
+
 print("Finite difference method")
 print(obj.finite_difference(
     3*math.e,
@@ -63,5 +67,13 @@ print(obj.finite_difference(
     q,
     f,
     eps,
-    b_coefs=[-1/h, -2+1/h]
+    b_coefs=[-1, 1-2*obj.step]
 ))
+
+print("System of equations Ax=b")
+print("A")
+print(obj.A)
+print()
+print("b")
+print(obj.B)
+print()

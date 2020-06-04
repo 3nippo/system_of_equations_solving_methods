@@ -32,21 +32,18 @@ def test_method(method_class, X, Y, func):
     print(method_class.__name__)
 
     for X_row, Y_row in zip(X, Y):
-        print()
-        print(f"X = {X_row}")
-        print("*"*15)
-        print()
-
         f = method_class(X_row, Y_row)
 
-        for x in X_row:
-            print(f"x = {x}")
-            print(f"Actual value: {func(x)}")
-            print(f"Approxed value: {f(x)}")
-            print()
+        print(f"Approximation values: {X_row}")
+        print()
+
+        print(f"Actual error in X* = {x_for_estimation}")
+        print(f"{abs(math.atan(x_for_estimation) - f(x_for_estimation))}")
 
         more_X, more_Y = get_vals_to_draw(func, X_row)
         _, approx_Y = get_vals_to_draw(f, X_row)
+
+        f.print_coefs()
 
         plt.plot(more_X, more_Y, label='Actual')
         plt.plot(more_X, approx_Y, label='Approxed')

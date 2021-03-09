@@ -2,6 +2,7 @@ import random
 import copy
 import math
 from collections import namedtuple
+import itertools
 
 
 class Matrix:
@@ -33,6 +34,12 @@ class Matrix:
         l_iter = (el for el in elems)
 
         self.__A = [[next(l_iter) for _ in range(n)] for _ in range(m)]
+    
+    @staticmethod
+    def from_2d(A):
+        MA = Matrix()
+        MA.__A = A
+        return MA
 
     def to_list(self):
         A = self
@@ -128,6 +135,17 @@ class Matrix:
 
     def assert_square(self):
         assert self.is_square(), "Matrix should be square"
+    
+    def abs(self):
+        A = self.copy()
+
+        m, n = A.shape()
+
+        for i in range(m):
+            for j in range(n):
+                A[i][j] = abs(A[i][j])
+
+        return A
 
     def max(self, axis=-1):
         if axis == -1:
@@ -286,7 +304,7 @@ class Matrix:
 
         res = Matrix(m, n)
 
-        for i in range(n):
+        for i in range(m):
             for j in range(n):
                 res[i][j] = self[i][j] - b[i][j]
 

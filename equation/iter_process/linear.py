@@ -1,20 +1,37 @@
 from equation.iter_process import __IterProcess__
 import math
-import itertools
 from matrix import Matrix, Norm
-
+import collections
 
 class Linear(__IterProcess__):
-    def simple_iteration(self, A, B, norm=Norm.column_norm):
+    def __run_iter_process(self, get_next, A, B, norm, init_x=None):
         return self.__iter_process__(
-            Linear.__GetCurrent__.simple_iteration,
-            *self.__calc_args_and_set_init_x__(A, B, norm)  # args_curr, diff func and args_diff
+            get_next,
+            *self.__calc_args_and_set_init_x__(A, B, norm, init_x)  # args_curr, diff func and args_diff
         )
 
-    def zeydel_method(self, A, B, norm=Norm.column_norm):
-        return self.__iter_process__(
+    def simple_iteration(self, *args, norm=Norm.column_norm, **kwargs):
+        return self.__run_iter_process(
+            Linear.__GetCurrent__.simple_iteration,
+            *args,
+            norm,
+            **kwargs
+        )
+
+    def zeydel_method(self, *args, norm=Norm.column_norm, **kwargs):
+        return self.__run_iter_process(
             Linear.__GetCurrent__.zeydel,
-            *self.__calc_args_and_set_init_x__(A, B, norm)  # args_curr, diff func and args_diff
+            *args,
+            norm,
+            **kwargs
+        )
+
+    def relax_method(self, *args, omega, norm=Norm.column_norm, **kwargs):
+        return self.__run_iter_process(
+            Linear.__GetCurrent__.gen_relax(omega),
+            *args,
+            norm,
+            **kwargs
         )
 
     def infimum_iterations_num(self, A, B, method='simple', norm=Norm.column_norm):
@@ -40,31 +57,33 @@ class Linear(__IterProcess__):
         return math.ceil((log(self.error) - log(norm(Bt)) + log(1 - Al_norm)) / divisor - 1)
 
     @staticmethod
-    def __non_zero_diagonal__(A, B):
+    def non_zero_diagonal(A, B):
         m, n = A.shape()
+        
+        perm = [0] * m
 
-        for perm in itertools.permutations(range(m)):
-            failed = 0
+        for i in range(m):
+            j = A.get_index_abs_max(i)
 
-            for i in range(n):
-                if A[perm[i]][i] == 0:
-                    failed = 1
-                    break
+            perm[j] = i
 
-            if not failed:
-                break
+        result = A.get_permutated(perm), B.get_permutated(perm)
 
-        if failed:
-            raise Linear.BadInputError
-
-        return A.get_permutated(perm), B.get_permutated(perm)
+        k = min(m, n)
+        
+        for i in range(k):
+            assert result[0][i][i] != 0, "Row permutation failed"
+        
+        return result
 
     @staticmethod
     def __preparation__(A, B):
         m, n = A.shape()
+        
+        assert A.is_square(), "A should be square"
 
-        A, B = Linear.__non_zero_diagonal__(A, B)
-
+        A, B = Linear.non_zero_diagonal(A, B)
+        
         Al = Matrix(m, n)
 
         for i in range(m):
@@ -82,10 +101,10 @@ class Linear(__IterProcess__):
 
         return Al, Bt
 
-    def __calc_args_and_set_init_x__(self, A, B, norm):
+    def __calc_args_and_set_init_x__(self, A, B, norm, init_x=None):
         Al, Bt = Linear.__preparation__(A, B)
-
-        self.init_x = Bt
+        
+        self.init_x = init_x.copy() or Bt
 
         Al_norm = norm(Al)
         error_const = Al_norm / (1 - Al_norm) if Al_norm < 1 else 1
@@ -102,21 +121,26 @@ class Linear(__IterProcess__):
             return B + A * last
 
         @staticmethod
-        def zeydel(last, A, B):
-            current = last.copy()
+        def gen_relax(omega):
+            def relax(last, A, B):
+                current = last.copy()
 
-            n, k = A.shape().rows, B.shape().columns
+                n, k = A.shape().columns, B.shape().columns
 
-            for i in range(k):
-                for j in range(n):
-                    current_cell = B[j][i]
+                for i in range(k):
+                    for j in range(n):
+                        current_cell = omega * B[j][i]
 
-                    for h in range(n):
-                        current_cell += current[h][i] * A[j][h]
+                        for h in range(n):
+                            current_cell += omega * current[h][i] * A[j][h]
 
-                    current[j][i] = current_cell
+                        current[j][i] = current_cell
 
-            return current
+                return current
+            
+            return relax
+        
+        zeydel = gen_relax.__get__(object)(1)
 
     class BadInputError(Exception):
         def __str__(self):
